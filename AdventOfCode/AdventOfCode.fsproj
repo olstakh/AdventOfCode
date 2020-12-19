@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp3.1</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Include="Day14_SpaceStoichiometry.fs" />
+    <Compile Include="Day13_Arcade.fs" />
+    <Compile Include="OrbitSimulatorSimple.fs" />
+    <Compile Include="OrbitSimulator.fs" />
+    <Compile Include="Orbit.fs" />
+    <Compile Include="Intcode.fs" />
+    <Content Include="Input.txt" />
+    <Compile Include="Program.fs" />
+  </ItemGroup>
+
+</Project>
