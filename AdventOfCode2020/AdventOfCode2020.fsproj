@@ -7,8 +7,10 @@
 
   <ItemGroup>
     <Compile Include="Scripts\ParserLibrary.fs" />
+    <Compile Include="Modulo.fs" />
     <Compile Include="Common.fs" />
     <Content Include="Input.txt" />
+    <Compile Include="Day13.fs" />
     <Compile Include="Day12.fs" />
     <Compile Include="Day11.fs" />
     <Compile Include="Day10.fs" />
