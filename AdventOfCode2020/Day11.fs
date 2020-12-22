@@ -35,11 +35,11 @@ type Plane = Plane of Position[,]
 
 let adjacentCoordsBy func plane coord =
     let adjacentCoordsDelta = List.allPairs [-1; 0; +1] [-1; 0; + 1] |> List.filter((<>)(0, 0))
-    let adjacentCoordsDeltaInfinite = adjacentCoordsDelta |> List.map(fun initial -> Seq.unfold(fun c -> Some(c, c + initial)) initial)
+    let adjacentCoordsDeltaInfinite = adjacentCoordsDelta |> List.map(fun initial -> Seq.unfold(fun c -> Some(c, c ++ initial)) initial)
 
     adjacentCoordsDeltaInfinite
     |> List.choose(
-        Seq.map((+)coord)
+        Seq.map((++)coord)
         >> Seq.takeWhile(Plane.tryPosition plane >> Option.isSome)
         >> func
         >> Seq.tryPick(Plane.tryPosition plane >> Option.filter(Position.IsSeat))
