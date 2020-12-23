@@ -2,6 +2,9 @@
 
 open System
 
+let applyFst f (a, b) = (f a, b)
+let applySnd f (a, b) = (a, f b)
+
 let addToLastOrAppend (head::tail as lst) line =
     if (String.IsNullOrEmpty(line))
     then ""::lst // append
@@ -33,3 +36,6 @@ type Coord =
         static member (*) (c, scale) = { X = c.X * scale; Y = c.Y * scale}
         static member Origin = { X = 0; Y = 0 }
         static member Manhattan c = abs c.X + abs c.Y
+
+let AddOrUpdateValue (key, value) = Map.remove key >> Map.add key value
+let AddOrUpdateValues m = Seq.foldBack AddOrUpdateValue m

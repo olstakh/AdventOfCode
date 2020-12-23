@@ -1,5 +1,6 @@
 ﻿module Day14
 
+open Common
 open ParserLibrary
 
 type MemoryAddress = MemoryAddress of int64
@@ -27,9 +28,6 @@ type Memory =
     } with
         static member Empty = { Mask = ""; Memory = Map.empty }
         static member GetMemory mem = mem.Memory
-
-let AddOrUpdateValue (key, value) = Map.remove key >> Map.add key value
-let AddOrUpdateValues m = Seq.foldBack AddOrUpdateValue m
 
 let Solve applyBitFunc applyTo updateResultWith =
 
