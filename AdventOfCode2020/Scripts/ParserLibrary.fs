@@ -472,6 +472,24 @@ module ParserLibrary
         |> mapP resultToInt
         <?> label
 
+    let pint64 = 
+        let label = "long integer" 
+
+        // helper
+        let resultToInt (sign,digits) = 
+            let i = digits |> int64  // ignore int overflow for now
+            match sign with
+            | Some ch -> -i  // negate the int
+            | None -> i
+        
+        // define parser for one or more digits
+        let digits = manyChars1 digitChar 
+
+        // an "int" is optional sign + one or more digits
+        opt (pchar '-') .>>. digits 
+        |> mapP resultToInt
+        <?> label
+
     // parse a float
     let pfloat = 
         let label = "float" 

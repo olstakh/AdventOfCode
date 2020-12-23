@@ -8,7 +8,7 @@ let main argv =
     |> Array.tryExactlyOne
     |> Option.defaultValue("..\..\..\Input.txt")
     |> File.ReadAllLines
-    |> Day13.Solve2
+    |> Day14.Solve1
     |> printfn "%d"
 
     0 // return an integer exit code
