@@ -10,6 +10,7 @@
     <Compile Include="Modulo.fs" />
     <Compile Include="Common.fs" />
     <Content Include="Input.txt" />
+    <Compile Include="Day16.fs" />
     <Compile Include="Day15.fs" />
     <Compile Include="Day14.fs" />
     <Compile Include="Day13.fs" />
