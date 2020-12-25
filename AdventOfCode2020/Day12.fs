@@ -13,9 +13,9 @@ type Orientation =
         static member RotateClockwise = function
             | East -> South | South -> West | West -> North | North -> East
 
-let RotateCoordClockwise c = { X = c.Y; Y = -c.X }
+let RotateCoordClockwise (c : Coord) = { X = c.Y; Y = -c.X }
 
-let MoveCoord c dist = function
+let MoveCoord (c : Coord) dist = function
     | East -> { c with X = c.X + dist }
     | West -> { c with X = c.X - dist }
     | North -> { c with Y = c.Y + dist }

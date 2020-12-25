@@ -36,6 +36,32 @@ type Coord =
         static member (*) (c, scale) = { X = c.X * scale; Y = c.Y * scale}
         static member Origin = { X = 0; Y = 0 }
         static member Manhattan c = abs c.X + abs c.Y
+        
+type Coord3D =
+    {
+        X : int
+        Y : int
+        Z : int
+    } with
+        static member (+) (c1, c2) = { X = c1.X + c2.X; Y = c1.Y + c2.Y; Z = c1.Z + c2.Z }
+        static member GetX me = me.X
+        static member GetY me = me.Y
+        static member GetZ me = me.Z
+        static member Origin = { X = 0; Y = 0; Z = 0 }
+
+type Coord4D =
+    {
+        X : int
+        Y : int
+        Z : int
+        W : int
+    } with
+        static member (+) (c1, c2) = { X = c1.X + c2.X; Y = c1.Y + c2.Y; Z = c1.Z + c2.Z; W = c1.W + c2.W }
+        static member GetX me = me.X
+        static member GetY me = me.Y
+        static member GetZ me = me.Z
+        static member GetW me = me.W
+        static member Origin = { X = 0; Y = 0; Z = 0; W = 0 }
 
 let AddOrUpdateValue (key, value) = Map.remove key >> Map.add key value
 let AddOrUpdateValues m = Seq.foldBack AddOrUpdateValue m
