@@ -509,3 +509,18 @@ module ParserLibrary
         |> mapP resultToFloat
         <?> label
 
+    let createParserForwardedToRef<'a>() =
+        let dummyParser= 
+            let innerFn input : Result<'a * Input> = failwith "unfixed forwarded parser"
+            {parseFn=innerFn; label="placeholder parser for recursive definitions"}
+    
+        // ref to placeholder Parser
+        let parserRef = ref dummyParser 
+    
+        // wrapper Parser
+        let innerFn input = 
+            // forward input to the placeholder
+            runOnInput !parserRef input 
+        let wrapperParser = {parseFn=innerFn; label="unknown"}
+    
+        wrapperParser, parserRef
