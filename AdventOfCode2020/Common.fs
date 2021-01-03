@@ -5,10 +5,13 @@ open System
 let applyFst f (a, b) = (f a, b)
 let applySnd f (a, b) = (a, f b)
 
-let addToLastOrAppend (head::tail as lst) line =
+let applyToListHead (head::tail) f =
+    (f head)::tail
+
+let addToLastOrAppend add deflt lst line =
     if (String.IsNullOrEmpty(line))
-    then ""::lst // append
-    else (head + " " + line)::tail // add to last
+    then deflt::lst // append
+    else applyToListHead lst (add line) // add to last
 
 let listWithOneItemChanged lst idx v =
     lst |> List.mapi(fun ind u -> if ind = idx then v else u)

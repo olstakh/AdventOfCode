@@ -37,7 +37,7 @@ type Passport =
             else None
 
 let private ParsePassports =
-    Array.fold Common.addToLastOrAppend [""]
+    Array.fold (Common.addToLastOrAppend (fun a b -> a + " " + b) "") [""]
     >> List.filter(String.IsNullOrEmpty >> not)
     >> List.choose (Passport.TryParse)
     

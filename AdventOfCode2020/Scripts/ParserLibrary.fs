@@ -357,6 +357,10 @@ module ParserLibrary
     let between p1 p2 p3 = 
         p1 >>. p2 .>> p3 
 
+    /// Keep the middle, between same parsers
+    let betweenSame p1 p2 =
+        between p1 p2 p1
+
     /// Parses one or more occurrences of p separated by sep
     let sepBy1 p sep =
         let sepThenP = sep >>. p            
