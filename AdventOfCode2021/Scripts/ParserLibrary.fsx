@@ -528,3 +528,37 @@ module ParserLibrary
         let wrapperParser = {parseFn=innerFn; label="unknown"}
     
         wrapperParser, parserRef
+
+    (*
+        Below this point are modifications, added by olstakh
+    *)
+
+    let binaryChar = pchar '0' <|> pchar '1'
+
+    let failP msg =
+        let innerFn input =
+            Failure ("", msg, parserPositionFromInputState input)
+        { parseFn = innerFn; label = "" }           
+
+    let parseByCount f count =
+        List.replicate count f
+        |> sequence
+        <?> sprintf "Wrapper for parser %s to be parsed %d times" (getLabel f) count
+
+    let parseAndNotePosition parser =
+        let label = sprintf "Wrapper for parser %s to capture the length of parsed input" (getLabel parser)
+        let innerFn input =
+            match runOnInput parser input with
+                | Success (value, remainingInput) ->
+                    let positionChange = remainingInput.position.column - input.position.column
+                    Success ((positionChange, value), remainingInput)
+                | Failure (label,err,pos) -> Failure (label,err,pos)
+        { parseFn = innerFn; label = label }
+
+    let rec parseBySize f size =
+        match size with
+            | 0 -> returnP []
+            | x when x < 0 -> failP (sprintf "Expected to read %d characters, but read %d characters more." size (-x))
+            | sz ->
+                parseAndNotePosition f >>=
+                    fun (usedSz, res) -> (parseBySize f (sz - usedSz)) |>> fun lst -> res::lst           
