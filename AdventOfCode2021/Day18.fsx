@@ -21,7 +21,6 @@ module Day18 =
     let pairValueParser =
         // Parser is self-referencing, need a placeholder reference
         let (pairValueParser, pairValueParserRef) = createParserForwardedToRef<PairValue>()
-
         let pNested = between (pchar '[') (pairValueParser .>> pchar ',' .>>. pairValueParser) (pchar ']')
         pairValueParserRef.Value <-
             choice [
@@ -42,39 +41,40 @@ module Day18 =
         | Nested (left, right) when applyToLeft -> Nested (add v true left, right )
         | Nested (left, right)                  -> Nested (left, add v false right)
 
+    // Returns Some tuple of explode action and modified root pair, or None if no action was performed.
     let tryExplode =
         let rec tryExplodeInternal depth = function
-            | Nested (Literal left, Literal right) when depth = 4 -> Some (Explode (left, right), Literal 0)
-            | Nested (left, right) as pp -> 
-                match (tryExplodeInternal (depth + 1) left) with
+            | Nested (Literal left, Literal right) when depth = 4 -> Some (Explode (left, right), Literal 0) // explode root
+            | Nested (left, right) -> 
+                match (tryExplodeInternal (depth + 1) left) with // explode left child
                 | Some (Explode (addToLeft, addToRight), newLeft) -> Some (Explode (addToLeft, 0), Nested (newLeft, add addToRight true right))
                 | _ ->
-                    match (tryExplodeInternal (depth + 1) right) with
+                    match (tryExplodeInternal (depth + 1) right) with // explode right child
                     | Some (Explode (addToLeft, addToRight), newRight) -> Some (Explode (0, addToRight), Nested (add addToLeft false left, newRight))
                     | _ -> None
             | _ -> None
         tryExplodeInternal 0
-
+    // Returns Some tuple of split action and modified root pair, or None if no action was performed.
     let rec trySplit = function
-        | Literal v when v >= 10 -> Some (Split, Nested (Literal (v / 2L), Literal ((v + 1L) / 2L)))
+        | Literal v when v >= 10 -> Some (Split, Nested (Literal (v / 2L), Literal ((v + 1L) / 2L))) // split root
         | Nested (left, right) ->
-            match (trySplit left) with
+            match (trySplit left) with // split left child
             | Some (Split, newLeft) -> Some (Split, Nested (newLeft, right))
             | _ ->
-                match (trySplit right) with
+                match (trySplit right) with // split right child
                 | Some (Split, newRight) -> Some (Split, Nested (left, newRight ))
                 | _ -> None
         | _ -> None
 
     let tryPerformAction pairValue =
-        [tryExplode; trySplit]
-        |> List.tryPick (fun actionFn -> actionFn(pairValue))
-        |> Option.map snd
+        [tryExplode; trySplit] // try explode first, then split
+        |> List.tryPick (fun actionFn -> actionFn(pairValue)) // pick the first successful action (explode or split), if any
+        |> Option.map snd // if any action was successful - return the new root, what exact action was peformed is not needed for caller
 
     let Normalize =
         Some
-        >> Seq.unfold (Option.map(fun p -> p, tryPerformAction p))
-        >> Seq.last
+        >> Seq.unfold (Option.map(fun p -> p, tryPerformAction p)) // keep unfolding, while action is performed, stop when None action was executed
+        >> Seq.last // last element in the sequence is a final pair, on which no action can be performed
 
     let AddPairs a b = Normalize (a + b)
 
