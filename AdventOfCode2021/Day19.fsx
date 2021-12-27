@@ -43,8 +43,8 @@ module Day19 =
         let Verify = Scanner.AbsoluteBeacons >> Set.ofList >> Set.intersect knownBeacons >> Set.count >> (<=)12
 
         [
-            for beacon1 in scanner1.Beacons do
-                for beacon2 in scanner2.Beacons do
+            for beacon1 in List.skip 11 scanner1.Beacons do
+                for beacon2 in List.skip 11 scanner2.Beacons do
                     let potentialScanner2Pos = (beacon1 - beacon2) + scanner1.Position.Value
                     yield { scanner2 with Position = Some potentialScanner2Pos }
         ]
