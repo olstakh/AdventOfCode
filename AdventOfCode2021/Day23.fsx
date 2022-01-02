@@ -1,30 +1,30 @@
-open Microsoft.FSharp.Reflection
-
 module Day23 =
-    // Adjacent matrix that can lookup distance and full path between verticies 
-    type AdjacencyMatrix (matrixSize : int) =
-        let Size = matrixSize
+    
+    type AdjacencyMatrix (edges : (int*int)[]) =
+        let maxVertice = (edges |> Array.map(fun (u, v) -> max u v) |> Array.max)
+        let Size = maxVertice + 1
 
-        member val Distances = Array2D.init Size Size (fun r c -> if r = c then 0 else 1000)
-        member val Paths = Array2D.create Size Size (-1)
+        let Distances = Array2D.init Size Size (fun r c -> if r = c then 0 else 1000)
+        let Paths = Array2D.create Size Size (-1)
 
-        member x.AddPath cost (u, v) =
-                x.Distances[u, v] <- cost
-                x.Distances[v, u] <- cost    
+        let AddEdge (u, v) = Distances[u, v] <- 1; Distances[v, u] <- 1
 
-        member x.CalculateOptimalPath() =
+        let CalculateOptimalPath() =
             for ch = 0 to Size - 1 do
                 for ot = 0 to Size - 1 do
                     for ku = 0 to Size - 1 do
-                        let alternativeDistance = x.Distances[ot, ch] + x.Distances[ch, ku]
-                        if  x.Distances[ot, ku] > alternativeDistance then
-                            x.Distances[ot, ku] <- alternativeDistance
-                            x.Paths[ot, ku] <- ch  
+                        let alternativeDistance = Distances[ot, ch] + Distances[ch, ku]
+                        if  Distances[ot, ku] > alternativeDistance then
+                            Distances[ot, ku] <- alternativeDistance
+                            Paths[ot, ku] <- ch  
 
-        member x.GetDistance (u, v) = x.Distances[u, v]
+        do edges |> Array.iter AddEdge
+        do CalculateOptimalPath()
+
+        member x.GetDistance (u, v) = Distances[u, v]
         member x.GetFullPath = function
-            | (u, v) when x.Paths[u, v] = -1 -> [v]
-            | (u, v) -> (x.GetFullPath (u, x.Paths[u, v])) @ (x.GetFullPath (x.Paths[u, v], v))
+            | (u, v) when Paths[u, v] = -1 -> [v]
+            | (u, v) -> (x.GetFullPath (u, Paths[u, v])) @ (x.GetFullPath (Paths[u, v], v))
 
     type Amphipod = | A | B | C | D
         with
@@ -38,19 +38,23 @@ module Day23 =
         | Hallway of int
         | Sideroom of Amphipod * int
         with
-            static member TotalHallwayPositions = 1 + Amphipod.Total + 1 + 1
-            static member TotalPositionsWith roomSize = BurrowPosition.TotalHallwayPositions + Amphipod.Total * roomSize
+            static member TotalHallwayPositions = 1 + Amphipod.Total * 2 + 1 + 1            
+            static member AllHallways = [| 0 .. BurrowPosition.TotalHallwayPositions - 1 |] |> Array.map Hallway
+
+            static member ToSideroom room depth = Sideroom (room, depth)
+            static member WithDepth depth room = Sideroom (room, depth)
+
             static member IsSideroomFor x = function
                 | Sideroom (x' ,_) when x = x' -> true
                 | _ -> false
-            static member IsInHallway = function | Hallway _ -> true | _ -> false
+            static member IsInHallway = function
+                | Hallway _ -> true
+                | _ -> false
             static member TrySideroomDepth = function
                 | Hallway _ -> None
                 | Sideroom (_, depth) -> Some depth
-            static member ToSideroom room depth = Sideroom (room, depth)
-            static member WithDepth depth room = Sideroom (room, depth)
             static member TryConnectToSideroom = function
-                | Hallway x -> Amphipod.All |> Array.tryItem (x / 2 - 1) |> Option.map (BurrowPosition.WithDepth 0)
+                | Hallway x when x % 2 = 0 -> Amphipod.All |> Array.tryItem (x / 2 - 1) |> Option.map (fun amphipod -> (Hallway x, Sideroom (amphipod, 0)))
                 | _ -> None
 
     type AmphipodPosition =
@@ -67,59 +71,32 @@ module Day23 =
 
     type BurrowMap (roomSize : int) =
         let RoomSize = roomSize
-        let Matrix = AdjacencyMatrix (BurrowPosition.TotalPositionsWith RoomSize)
-        let PositionToIndex = function
-            | Hallway h -> h
-            | Sideroom (a, r) -> BurrowPosition.TotalHallwayPositions + (Amphipod.Index a) * RoomSize + r
-        let IndexToPosition = function
-            | hallway when hallway < BurrowPosition.TotalHallwayPositions -> Hallway hallway
-            | someRoom ->   let someRoom = someRoom - BurrowPosition.TotalHallwayPositions
-                            let room = someRoom / roomSize
-                            let subroom = someRoom % roomSize
-                            Sideroom (Amphipod.All[room], subroom)
+
+        let subrooms room = [| 0 .. RoomSize - 1 |] |> Array.map(BurrowPosition.ToSideroom room)
+        let allPositions = Amphipod.All |> Array.collect subrooms |> Array.append BurrowPosition.AllHallways
+
+        let PositionToIndex x = allPositions |> Array.findIndex ((=)x)
+        let IndexToPosition x = allPositions |> Array.item x
 
         let PositionsToIndex (u, v) = (PositionToIndex u, PositionToIndex v)
-        let AddManyPathWith cost = List.map PositionsToIndex >> List.iter (Matrix.AddPath cost)
-
-        let InitMatrix() =       
-            let connectTo u v = (u, v)
-            let connectToRoom x = List.map (connectTo (Sideroom (x, 0)))
-            let connectToRoomByIdx (idx, room) = connectToRoom room [Hallway (idx + 1); Hallway (idx + 2)]
-            let connectSubrooms room =
-                [0 .. RoomSize - 1]
-                |> List.map(fun depth -> Sideroom (room, depth))
-                |> List.pairwise
-            
-            let hallwayConnections = [1 .. BurrowPosition.TotalHallwayPositions - 2] |> List.map Hallway |> List.pairwise
-            let leftCorner = (Hallway 0, Hallway 1)
-            let rightCorner = (Hallway (BurrowPosition.TotalHallwayPositions - 2), Hallway (BurrowPosition.TotalHallwayPositions - 1))
-
-            let entrances =
-                Amphipod.All
-                |> Array.toList
-                |> List.indexed
-                |> List.collect connectToRoomByIdx
-
-            let subrooms =
-                Amphipod.All
-                |> Array.toList
-                |> List.collect connectSubrooms
-
-            hallwayConnections |> AddManyPathWith 2
-            [leftCorner; rightCorner] |> AddManyPathWith 1
-            entrances |> AddManyPathWith 2
-            subrooms |> AddManyPathWith 1
-
-        do InitMatrix()
-        do Matrix.CalculateOptimalPath()
+        
+        let Matrix =  
+            let hallways = BurrowPosition.AllHallways |> Array.pairwise
+            let connections = BurrowPosition.AllHallways |> Array.choose(BurrowPosition.TryConnectToSideroom)
+            let siderooms = Amphipod.All |> Array.collect (subrooms >> Array.pairwise)
+            hallways |> Array.append connections |> Array.append siderooms |> Array.map PositionsToIndex |> AdjacencyMatrix
 
         member x.GetFullPath = PositionsToIndex >> Matrix.GetFullPath >> List.map IndexToPosition
         member x.GetDistance = PositionsToIndex >> Matrix.GetDistance
         member x.GetFullPathFrom u v = x.GetFullPath (u, v)    
 
-    let Solve roomSize initialPositions =
+    let Solve initialPositions =
+
+        let maxRoomDepth = initialPositions |> List.choose(AmphipodPosition.GetPosition >> BurrowPosition.TrySideroomDepth) |> List.max
+        let roomSize = maxRoomDepth + 1
 
         let map = BurrowMap(roomSize)
+
         let mutable Memoization = Map.empty
         let Memoize key value = 
             Memoization <- Map.add key value Memoization
@@ -132,7 +109,7 @@ module Day23 =
             let cleanRoom amphipod = checkPositions (List.filter (AmphipodPosition.IsInRoomFor amphipod) >> List.forall AmphipodPosition.InDestinationRoom)
             let isFinal = checkPositions (List.forall AmphipodPosition.InDestinationRoom)
 
-            let goHallwayWhileCan x = map.GetFullPathFrom x >> List.takeWhile (occupied >> not) >> List.filter (BurrowPosition.IsInHallway)
+            let goHallwayWhileCan x = map.GetFullPathFrom x >> List.takeWhile (occupied >> not) >> List.filter (BurrowPosition.IsInHallway) >> List.filter (BurrowPosition.TryConnectToSideroom >> Option.isNone)
             let possibleMoves = function
                 | { Amphipod = _; Position = Sideroom (x, _)  } when cleanRoom x -> []
                 | { Amphipod = amphipod; Position = Hallway _ } when not (cleanRoom amphipod) -> []
@@ -142,9 +119,11 @@ module Day23 =
                     |> List.tryFind (map.GetFullPathFrom (Hallway x) >> List.forall(occupied >> not))
                     |> Option.map List.singleton
                     |> Option.defaultValue []
-                | { Amphipod = _; Position = position } -> (goHallwayWhileCan position (Hallway 0)) @ (goHallwayWhileCan position (Hallway 6))
+                | { Amphipod = _; Position = position } ->
+                    goHallwayWhileCan position (Array.head BurrowPosition.AllHallways) @
+                    goHallwayWhileCan position (Array.last BurrowPosition.AllHallways)
         
-            let tryMakeMoves x =
+            let makeMoves x =
                 let idx = checkPositions (List.findIndex ((=)x))
                 let tryMakeMove move =
                     let dist = map.GetDistance (x.Position, move) //BurrowPosition.Distance 0 (List.item idx positions) move
@@ -158,36 +137,28 @@ module Day23 =
             let evaluateWith = function   
                 | _ when isFinal -> Some 0
                 | p when Memoization.ContainsKey p -> Memoization[p]
-                | p -> p |> List.collect tryMakeMoves |> List.sort |> List.tryHead |> Memoize p
+                | p -> p |> List.collect makeMoves |> List.sort |> List.tryHead |> Memoize p
 
             evaluateWith positions
 
         OrderAmphipods initialPositions
 
-    let SolveRaw (arr : string[]) =    
-        let positions  =
-            let parseChar (r, c) = Amphipod.TryParse >> Option.map(fun amphipod -> AmphipodPosition.WithPosition (Sideroom (Amphipod.All[(c - 3) / 2], r - 2)) amphipod)
-            let parseRow (row, line : string) = line.ToCharArray() |> Array.indexed |> Array.choose(fun (col, ch) -> parseChar (row, col) ch)
+    let Parse (arr : string[]) =    
+        let parseChar (r, c) = Amphipod.TryParse >> Option.map(fun amphipod -> AmphipodPosition.WithPosition (Sideroom (Amphipod.All[(c - 3) / 2], r - 2)) amphipod)
+        let parseRow (row, line : string) = line.ToCharArray() |> Array.indexed |> Array.choose(fun (col, ch) -> parseChar (row, col) ch)
 
-            arr
-            |> Array.indexed
-            |> Array.collect parseRow
-            |> Array.toList
-
-        let maxRoomDepth = positions |> List.choose(AmphipodPosition.GetPosition >> BurrowPosition.TrySideroomDepth) |> List.max
-        let roomSize = maxRoomDepth + 1
-        Solve roomSize positions
+        arr |> Array.indexed |> Array.collect parseRow |> Array.toList
 
     let data =
         "Input.txt"
         |> System.IO.File.ReadAllLines
 
     module Task1 =
-        let Answer = data |> SolveRaw
+        let Answer = data |> Parse |> Solve
 
     module Task2 =
         let toAdd = [|
             "  #D#C#B#A#"
             "  #D#B#A#C#" 
         |]
-        let Answer = data |> Array.insertManyAt 3 toAdd |> SolveRaw
+        let Answer = data |> Array.insertManyAt 3 toAdd |> Parse |> Solve
