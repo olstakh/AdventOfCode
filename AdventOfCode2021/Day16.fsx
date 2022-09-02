@@ -28,19 +28,21 @@ module Day16 =
                 
             static member Apply operation values =
                 // Applies given funtion to the first 2 values from the list
-                let applyFor2Values f =
-                    match values with
+                let applyFor2Values f = function
                     | [firstValue; secondValue] -> f firstValue secondValue
                     | _ -> failwithf "Operation not supported, was expecting exactly 2 values, given %d values" (List.length values)
 
-                match (operation) with
-                | Sum -> values |> List.reduce (+)
-                | Product -> values |> List.reduce (*)
-                | Minimum -> values |> List.min
-                | Maximum -> values |> List.max
-                | GreaterThan -> applyFor2Values (fun a b -> if a > b then 1L else 0L)
-                | LessThan -> applyFor2Values (fun a b -> if a < b then 1L else 0L)
-                | EqualTo -> applyFor2Values (fun a b -> if a = b then 1L else 0L)
+                let aggregate =
+                    match (operation) with
+                    | Sum -> List.reduce (+)
+                    | Product -> List.reduce (*)
+                    | Minimum -> List.min
+                    | Maximum -> List.max
+                    | GreaterThan -> applyFor2Values (fun a b -> if a > b then 1L else 0L)
+                    | LessThan -> applyFor2Values (fun a b -> if a < b then 1L else 0L)
+                    | EqualTo -> applyFor2Values (fun a b -> if a = b then 1L else 0L)
+                    
+                aggregate values
                 
     type Packet =
         {
