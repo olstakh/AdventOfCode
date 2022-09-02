@@ -30,7 +30,7 @@ module Day16 =
                 // Applies given funtion to the first 2 values from the list
                 let applyFor2Values f = function
                     | [firstValue; secondValue] -> f firstValue secondValue
-                    | _ -> failwithf "Operation not supported, was expecting exactly 2 values, given %d values" (List.length values)
+                    | badList -> failwithf "Operation not supported, was expecting exactly 2 values, given %d values" (List.length badList)
 
                 let aggregate =
                     match (operation) with
