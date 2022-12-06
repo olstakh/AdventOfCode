@@ -533,7 +533,7 @@ module ParserLibrary
         Below this point are modifications, added by olstakh
     *)
 
-    let binaryChar = pchar '0' <|> pchar '1'
+    let pBinaryChar = pchar '0' <|> pchar '1'
 
     let failP msg =
         let innerFn input =
