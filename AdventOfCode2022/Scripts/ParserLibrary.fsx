@@ -562,3 +562,8 @@ module ParserLibrary
             | sz ->
                 parseAndNotePosition f >>=
                     fun (usedSz, res) -> (parseBySize f (sz - usedSz)) |>> fun lst -> res::lst           
+
+    let ParseLine parser (s:string) =
+        match (run parser s) with
+            | Success (result, remainingInput) -> result
+            | Failure (label, error, pos) -> failwithf "Failed to parse input. Label: %s, Error : %s, position : %d" label error pos.column

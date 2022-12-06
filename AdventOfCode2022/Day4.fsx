@@ -33,15 +33,10 @@ module Day4 =
                 Segment.Parser .>> pchar ',' .>>. Segment.Parser |>> SegmentPair.Construct
                 <?> "Segment pair"
 
-    let Parse (s:string) =
-        match (run SegmentPair.Parser s) with
-            | Success (segmentPair, remainingInput) -> segmentPair
-            | Failure (label, error, pos) -> failwithf "Failed to parse input. Label: %s, Error : %s, position : %d" label error pos.column
-
     let InputData =
         "Input.txt"
         |> System.IO.File.ReadAllLines
-        |> Array.map Parse
+        |> Array.map (ParseLine (SegmentPair.Parser))
  
     let Solve filterCondition =
         InputData
