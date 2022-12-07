@@ -1,4 +1,6 @@
 #load "Scripts\\ParserLibrary.fsx"
+#load "Scripts\\Utils.fsx"
+open Utils
 open ParserLibrary
 
 module Day4 =
@@ -34,8 +36,7 @@ module Day4 =
                 <?> "Segment pair"
 
     let InputData =
-        "Input.txt"
-        |> System.IO.File.ReadAllLines
+        Input()
         |> Array.map (ParseLine (SegmentPair.Parser))
  
     let Solve filterCondition =

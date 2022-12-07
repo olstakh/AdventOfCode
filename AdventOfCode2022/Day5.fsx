@@ -1,4 +1,6 @@
 #load "Scripts\\ParserLibrary.fsx"
+#load "Scripts\\Utils.fsx"
+open Utils
 open ParserLibrary
 
 module Day5 =
@@ -49,9 +51,7 @@ module Day5 =
         many ((p1 <|> p2) .>> opt whitespaceChar) |>> List.toArray
 
     let ReadInput() =
-        let allData =
-            "Input.txt"
-            |> System.IO.File.ReadAllLines
+        let allData = Input()
 
         let emptyLine = allData |> Array.findIndex(fun s -> s.Length = 0)
 

@@ -1,3 +1,6 @@
+#load "Scripts\\Utils.fsx"
+open Utils
+
 module Day1 =
 
     let parse caloriesPerElf = function
@@ -6,8 +9,7 @@ module Day1 =
                     (int calory + currentCalories)::restOfElves
 
     let elves =
-        "Input.txt"
-        |> System.IO.File.ReadAllLines
+        Input()
         |> Array.fold parse [0]
         |> List.sortDescending
 

@@ -1,3 +1,6 @@
+#load "Scripts\\Utils.fsx"
+open Utils
+
 module Day2 =
 
     type RoundResult =
@@ -37,8 +40,7 @@ module Day2 =
         RoundResult.Score(RPS.Play(p2, p1)) + (RPS.Value p2)
 
     let Solve parser =
-        "Input.txt"
-        |> System.IO.File.ReadAllLines
+        Input()
         |> Array.map (parser >> PlayForSecondPlayer)
         |> Array.sum
 

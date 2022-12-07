@@ -1,3 +1,6 @@
+#load "Scripts\\Utils.fsx"
+open Utils
+
 module Day3 =
 
     let IntersectMany : string[] -> char =
@@ -8,9 +11,7 @@ module Day3 =
         | upper when System.Char.IsUpper(upper) -> int upper - int 'A' + 27
         | bad -> failwithf "Unknown symbol %c" bad
 
-    let data = 
-        "Input.txt"
-        |> System.IO.File.ReadAllLines
+    let data = Input()
 
     let Solve = Seq.map (IntersectMany >> Priority) >> Seq.sum
 
