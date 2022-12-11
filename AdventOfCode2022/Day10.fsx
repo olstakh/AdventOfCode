@@ -1,8 +1,3 @@
-#load "Scripts\\ParserLibrary.fsx"
-#load "Scripts\\Utils.fsx"
-open Utils
-open ParserLibrary
-
 module Day10 =
     type Instruction =
         | Noop
@@ -12,31 +7,25 @@ module Day10 =
                 let tokenized = s.Split(' ')
                 if (tokenized[0] = "noop") then Noop else Add (int tokenized[1])
 
-    let data = Input() |> Array.map Instruction.Parse
+    let data = "Input.txt" |> System.IO.File.ReadAllLines |> Array.map Instruction.Parse
+
+    let inline Solve accumulator (currentCycle, rValue, accumulatedValue) = function
+        | Noop -> (currentCycle + 1, rValue, accumulatedValue + accumulator rValue currentCycle)
+        | Add x -> (currentCycle + 2, rValue + x, accumulatedValue + accumulator rValue currentCycle + accumulator rValue (currentCycle + 1))
 
     module Task1 =
-        let tryAdd x = function
+        let addValue x = function
             | cycle when cycle % 40 = 20  -> cycle * x
             | _ -> 0
 
-        let rec Simulate (currentCycle, accumulatedSum, registerValue) = function
-            | Noop -> (currentCycle + 1, accumulatedSum + tryAdd registerValue currentCycle, registerValue)
-            | Add x  -> (currentCycle + 2, accumulatedSum + tryAdd registerValue currentCycle + tryAdd registerValue (currentCycle + 1), registerValue + x)
-
-        let (_, Answer, _) =
-            data |> Array.fold Simulate (1, 0, 1)
+        let (_, _, Answer) = data |> Array.fold (Solve addValue) (1, 1, 0)
 
     module Task2 =
-        let addPixel currentCycle currentValue =
-            let position = (currentCycle - 1) % 40
-            if (position >= currentValue - 1 && position <= currentValue + 1) then "#" else "."
+        let addPixel x = function
+            | cycle when abs (((cycle - 1) % 40) - x) <= 1 -> "#"
+            | _ -> "."
 
-        let rec DrawImage (currentCycle, currentImage, registerValue) = function
-            | Noop -> (currentCycle + 1, currentImage + addPixel currentCycle registerValue, registerValue)
-            | Add x -> (currentCycle + 2, currentImage + addPixel currentCycle registerValue + addPixel (currentCycle + 1) registerValue, registerValue + x)
-
-        let (_, Answer, _) = 
-            data |> Array.fold DrawImage (1, "", 1)
+        let (_, _, Answer) = data |> Array.fold (Solve addPixel) (1, 1, "")
 
         let rec Draw = function
             | s when String.length s <= 40 -> printfn "%s" s
