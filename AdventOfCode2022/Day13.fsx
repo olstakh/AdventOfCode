@@ -15,8 +15,7 @@ module Day13 =
                     pchar '[' >>. sepBy pData (pchar ',') .>> pchar ']' |>> Nested
                 ]
                 pData
-            static member Parse (s:string) =
-                ParseLine (Data.Parser) s
+            static member Parse = ParseLine (Data.Parser)
             static member Compare = function
                 | (Literal x, Literal y) -> x.CompareTo(y)
                 | (Literal x, Nested y) -> Data.Compare (Nested [Literal x], Nested y)
